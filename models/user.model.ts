@@ -18,7 +18,20 @@ const UserSchema = new mongoose.Schema(
     favourite: [
       {
         type: mongoose.Schema.Types.ObjectId,
-        ref: "product",
+        ref: "Products",
+      },
+    ],
+    cart: [
+      {
+        product: {
+          type: mongoose.Schema.Types.ObjectId,
+          required: true,
+          ref: "Products",
+        },
+        quantity: {
+          type: Number,
+          default: 0,
+        },
       },
     ],
   },

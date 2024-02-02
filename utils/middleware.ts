@@ -36,9 +36,22 @@ export const errorHandler = (
         valid: false,
         message: err.message,
       });
+    } else if (err.name === "CastError") {
+      return res.status(200).send({
+        valid: false,
+        message: "invalid id",
+      });
+    } else if (err.message === "invalid signature") {
+      return res.status(200).send({
+        valid: false,
+        message: "incorrect token",
+      });
     } else {
-      console.log("Error: " + err);
-      return res.sendStatus(500);
+      console.log("Error: " + err.message);
+      return res.status(500).send({
+        valid: true,
+        message: err.message,
+      });
     }
   } else {
     console.log(err);

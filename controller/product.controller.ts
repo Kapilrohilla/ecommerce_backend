@@ -180,14 +180,12 @@ export const deleteProduct = async (
   }
   try {
     const deletedProduct: any = await ProductModel.findByIdAndDelete(id);
-    console.log(deletedProduct);
 
     if (deletedProduct?.image) {
       const image = deletedProduct["image"];
       const imageRef = ref(storage, image);
       try {
         const deleteImageResponse = await deleteObject(imageRef);
-        console.log(deleteImageResponse, 0);
       } catch (err) {
         console.log(err);
       }
