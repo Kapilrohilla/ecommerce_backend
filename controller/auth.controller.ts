@@ -70,7 +70,10 @@ export const LoginController = async (req: Request, res: Response) => {
       message: "email & password is required",
     });
   }
-  const user: any = await UserModel.findOne({ email: body.email }).lean();
+  const user: any = await UserModel.findOne({ email: body.email })
+    .populate("cart.product")
+    .populate("orders")
+    .lean();
   if (user === null) {
     return res.status(200).send({
       valid: false,

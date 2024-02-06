@@ -92,11 +92,24 @@ export const getProducts = async (
   res: Response,
   next: NextFunction
 ) => {
-  const { skip = 0, limit = 20, category } = req.query;
+  const { skip = 0, limit = 20, category, brand } = req.query;
   try {
     let products;
+    console.log(brand);
     if (category) {
-      products = await ProductModel.find({ category })
+      if (brand) {
+        products = await ProductModel.find({ category, brand })
+          .sort({ _id: -1 })
+          .skip(Number(skip))
+          .limit(Number(limit));
+      } else {
+        products = await ProductModel.find({ category })
+          .sort({ _id: -1 })
+          .skip(Number(skip))
+          .limit(Number(limit));
+      }
+    } else if (brand) {
+      products = await ProductModel.find({ brand })
         .sort({ _id: -1 })
         .skip(Number(skip))
         .limit(Number(limit));
@@ -160,6 +173,31 @@ export const getCategories = async (
     return res.status(200).send({
       valid: true,
       categories,
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+export const getBrand = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  const { category } = req.query;
+
+  try {
+    let brands;
+    if (category) {
+      brands = await ProductModel.find({ category: category }).distinct(
+        "brand"
+      );
+    } else {
+      brands = await ProductModel.find({}).distinct("brand");
+    }
+
+    return res.status(200).send({
+      valid: true,
+      brands,
     });
   } catch (err) {
     next(err);

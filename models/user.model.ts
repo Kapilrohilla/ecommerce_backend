@@ -15,6 +15,9 @@ const UserSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    address: {
+      type: String,
+    },
     favourite: [
       {
         type: mongoose.Schema.Types.ObjectId,
@@ -32,6 +35,12 @@ const UserSchema = new mongoose.Schema(
           type: Number,
           default: 0,
         },
+      },
+    ],
+    orders: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Orders",
       },
     ],
   },

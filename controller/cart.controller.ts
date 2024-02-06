@@ -3,9 +3,46 @@ import jwt from "jsonwebtoken";
 import UserModel from "../models/user.model";
 import ProductModel from "../models/product.model";
 
-interface ExtendedRequest extends Request {
+export interface ExtendedRequest extends Request {
   token?: string;
 }
+export const getCart = async (
+  req: ExtendedRequest,
+  res: Response,
+  next: NextFunction
+) => {
+  const userToken = req.token;
+  if (!userToken) {
+    return res.status(200).send({
+      valid: false,
+      message: "Token is required",
+    });
+  }
+
+  let email;
+  try {
+    email = jwt.verify(userToken, process.env.SECRET!);
+  } catch (err) {
+    return next(err);
+  }
+
+  const user = await UserModel.findOne({ email: email }).populate(
+    "cart.product"
+  );
+
+  if (!user) {
+    return res.status(200).send({
+      valid: false,
+      message: "user don't exists, provide correct token",
+    });
+  }
+
+  return res.status(200).send({
+    valid: true,
+    cartData: user.cart,
+  });
+};
+
 export const add2cart = async (
   req: ExtendedRequest,
   res: Response,
@@ -13,7 +50,7 @@ export const add2cart = async (
 ) => {
   const body: any = req.body;
   const userToken = req.token;
-
+  console.log(body);
   if (!body.productId) {
     return res.status(200).send({
       valid: false,
@@ -194,4 +231,59 @@ export const clearCart = async (
   } catch (err) {
     next(err);
   }
+};
+
+export const updatedAddress = async (
+  req: ExtendedRequest,
+  res: Response,
+  next: NextFunction
+) => {
+  const userToken = req.token;
+  const body: any = req.body;
+  const address: string = req.body.address;
+
+  if (typeof address !== "string") {
+    return res.status(200).send({
+      valid: false,
+      message: "address must be a string",
+    });
+  }
+
+  if (!userToken) {
+    return res.status(200).send({
+      valid: false,
+      message: "Token is required",
+    });
+  }
+
+  if (!address) {
+    return res.status(200).send({
+      valid: false,
+      message: "address is required",
+    });
+  }
+
+  let email;
+  try {
+    email = jwt.verify(userToken, process.env.SECRET!);
+  } catch (err) {
+    return next(err);
+  }
+
+  const user = await UserModel.findOne({ email: email });
+
+  if (!user) {
+    return res.status(200).send({
+      valid: false,
+      message: "failed to find user",
+    });
+  }
+  user.address = address;
+
+  const updatedUser = await user.save();
+
+  return res.status(200).send({
+    valid: true,
+    user: updatedUser,
+  });
 };

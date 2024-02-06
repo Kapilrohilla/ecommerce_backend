@@ -10,10 +10,11 @@ const MONGODB_URI: string | undefined = process.env.MONGODB_URI;
 import UserModel from "./models/user.model";
 import OtpModel from "./models/otp.model";
 import productRouter from "./routes/product.route";
-import blogRouter from "./routes/blog.route";
 import cartRouter from "./routes/cart.route";
+import orderRouter from "./routes/order.route";
 import morgan from "morgan";
 import cors from "cors";
+import ProductModel from "./models/product.model";
 
 app.use(cors());
 
@@ -40,10 +41,9 @@ app.get("/ping", (req: Request, res: Response) => {
 
 app.use("/auth", authRouter);
 app.use("/product", productRouter);
-app.use("/blog", blogRouter);
-
 // user action
 app.use("/cart", tokenExtractor, cartRouter);
+app.use("/order", tokenExtractor, orderRouter);
 
 // temporary route to clear the database
 app.get("/clear-db", async (req: Request, res: Response) => {
@@ -51,6 +51,7 @@ app.get("/clear-db", async (req: Request, res: Response) => {
   try {
     await UserModel.deleteMany({});
     await OtpModel.deleteMany({});
+    await ProductModel.deleteMany({});
     console.log("Successfully Deleted the Database");
     return res.sendStatus(200);
   } catch (err: unknown) {
