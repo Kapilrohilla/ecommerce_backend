@@ -81,7 +81,6 @@ export const LoginController = async (req: Request, res: Response) => {
       message: "user not exists",
     });
   }
-  console.log(user, ": user");
 
   const isValidPassword = bcrypt.compareSync(body?.password, user?.password);
 
@@ -109,7 +108,6 @@ export const SignUpController = async (req: Request, res: Response) => {
   const body: SignupPayload = req.body;
 
   if (!(body?.email && body?.password)) {
-    console.log(body?.email, body?.password);
     return res.send({
       valid: false,
       message: "email and password is required",
@@ -144,7 +142,6 @@ export const SignUpController = async (req: Request, res: Response) => {
 
   try {
     const saveUserResponse = await newUser.save();
-    console.log(saveUserResponse);
 
     const token = jwt.sign(saveUserResponse?.email!, SECRETKEY!);
 
@@ -156,8 +153,6 @@ export const SignUpController = async (req: Request, res: Response) => {
       },
     });
   } catch (err: any) {
-    console.log("Failed to save user");
-    console.log(err);
     return res.sendStatus(500);
   }
 };
@@ -179,7 +174,6 @@ export const verifyOtp = async (
   const otp = Number(body.otp);
   // user details to update isVerified field.
   const user: any = await UserModel.findOne({ email: email }).lean();
-  console.log(user, 0);
   if (!(email && otp)) {
     return res.status(200).json({
       valid: true,
@@ -199,25 +193,20 @@ export const verifyOtp = async (
   }
 
   const DbOtp = await OtpModel.findOne({ user: user?._id.toString() });
-  console.log(DbOtp, 0);
   if (!DbOtp) {
     next(`${email} otp isn't saved in DB`);
   } else {
     if (DbOtp?.otp === otp) {
-      console.log("Otp verification stage");
-      console.log("user: " + user);
       try {
         const updatedUser = await UserModel.findOneAndUpdate(
           { _id: user?._id },
           { isVerified: true },
           { new: true }
         );
-        console.log(updatedUser, ": updatedUser");
       } catch (err) {
         return res.sendStatus(500);
       }
       const response = await DbOtp.deleteOne();
-      console.log(response);
       return res.status(200).send({
         valid: true,
         message: "email verified successfully",
@@ -246,8 +235,6 @@ export const sendOtp = async (req: any, res: Response, next: NextFunction) => {
 
   const email = jwt.verify(token, SECRETKEY!);
 
-  console.log(email, 29);
-
   try {
     const user = await UserModel.find({ email: email });
     if (!user) {
@@ -260,10 +247,8 @@ export const sendOtp = async (req: any, res: Response, next: NextFunction) => {
     const previousOtp = await OtpModel.find({ user: user?._id });
 
     if (previousOtp.length > 0) {
-      console.log(previousOtp);
       next(new Error("Working: have some previous otp"));
     } else {
-      console.log("no previous otp found");
       const generateOtp = () => Math.floor(Math.random() * 8999) + 1000;
       const otp = generateOtp();
       const saveOtp = new OtpModel({

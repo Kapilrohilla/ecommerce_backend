@@ -9,7 +9,6 @@ export const tokenExtractor = (req: any, res: Response, next: NextFunction) => {
     if (authorizationHeader.includes("Bearer")) {
       const token = authorizationHeader.split(" ")[1];
       req.token = token;
-      console.log("Token: ", token);
       next();
     } else {
       const err = new Error("Invalid Token");
@@ -26,7 +25,6 @@ export const errorHandler = (
 ) => {
   if (err instanceof Error) {
     if (err.message === "Missing Authorization Token") {
-      console.log(err.message);
       return res.status(200).send({
         valid: false,
         message: "Missing Authroization Token in header",
@@ -47,14 +45,12 @@ export const errorHandler = (
         message: "incorrect token",
       });
     } else {
-      console.log("Error: " + err.message);
       return res.status(500).send({
         valid: true,
         message: err.message,
       });
     }
   } else {
-    console.log(err);
     return res.sendStatus(500);
   }
 };

@@ -53,8 +53,6 @@ export const createOrder = async (
   for (let i = 0; i < cart.length; i++) {
     const productId = cart[i].product;
 
-    console.log(productId, " < _ productId=");
-
     const fetchedProduct = await ProductModel.findById(productId);
     if (!fetchedProduct) {
       continue;
@@ -62,24 +60,20 @@ export const createOrder = async (
     totalAmount += cart[i].quantity * fetchedProduct.price;
   }
   const products = cart.reduce((acc, current) => {
-    // console.log(current, "< _ current");
     return acc.concat({
       // @ts-ignore
       productid: current.product,
       quantity: current.quantity,
     });
   }, []);
-  // console.log("<>" + JSON.stringify(products));
   // return res.sendStatus(500);
   const address = user.address;
-  console.log(cart, ",,, cart");
   const order = new OrderModel({
     userId,
     products,
     address,
     totalAmount,
   });
-  console.log(order, "< - order");
   // return res.sendStatus(500);
   let orderCreatedSuccessfully = null;
   try {
@@ -88,8 +82,6 @@ export const createOrder = async (
     user.cart = [];
     user.orders.push(orderCreatedSuccessfully._id);
     const updatedUser = await user.save();
-
-    console.log(updatedUser);
   } catch (err) {
     return next(err);
   }
@@ -136,7 +128,6 @@ export const getOrders = async (
     return next(err);
   }
 
-  console.log(orders);
   return res.status(200).send({
     valid: true,
     orders: orders,
