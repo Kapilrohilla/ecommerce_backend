@@ -70,7 +70,8 @@ export const LoginController = async (req: Request, res: Response) => {
       message: "email & password is required",
     });
   }
-  const user: any = await UserModel.findOne({ email: body.email })
+
+  let user: any = await UserModel.findOne({ email: body.email })
     .populate("cart.product")
     .populate("orders")
     .lean();
@@ -80,8 +81,8 @@ export const LoginController = async (req: Request, res: Response) => {
       message: "user not exists",
     });
   }
-
   console.log(user, ": user");
+
   const isValidPassword = bcrypt.compareSync(body?.password, user?.password);
 
   if (!isValidPassword) {

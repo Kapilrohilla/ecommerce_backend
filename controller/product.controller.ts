@@ -125,9 +125,9 @@ export const getProducts = async (
       products,
     });
   } catch (err) {
-    next(err);
+    return next(err);
   }
-  return res.sendStatus(500);
+  // return res.sendStatus(500);
 };
 
 export const getSpecificProduct = async (

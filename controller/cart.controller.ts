@@ -50,7 +50,7 @@ export const add2cart = async (
 ) => {
   const body: any = req.body;
   const userToken = req.token;
-  console.log(body);
+  // console.log(body);
   if (!body.productId) {
     return res.status(200).send({
       valid: false,
@@ -95,6 +95,7 @@ export const add2cart = async (
       if (!updated) {
         user.cart.push({ product: body.productId, quantity: 1 });
       }
+      console.log(user.cart, "< - cart");
       const updatedUser = await user.save();
 
       return res.status(201).send({

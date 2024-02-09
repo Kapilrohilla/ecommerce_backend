@@ -4,8 +4,100 @@ import jwt from "jsonwebtoken";
 import UserModel from "../models/user.model";
 import OrderModel from "../models/order.model";
 import ProductModel from "../models/product.model";
+// import Razorpay from "razorpay";
 
 export const createOrder = async (
+  req: ExtendedRequest,
+  res: Response,
+  next: NextFunction
+) => {
+  const userToken = req.token;
+
+  if (!userToken) {
+    return res.status(200).send({
+      valid: false,
+      message: "Token is required",
+    });
+  }
+  let email;
+  try {
+    email = jwt.verify(userToken, process.env.SECRET!);
+  } catch (err) {
+    return next(err);
+  }
+
+  // const razorInstance = new Razorpay({
+  //   key_id: process.env.RAZOR_ID!,
+  //   key_secret: process.env.RAZOR_SECRET!,
+  // });
+
+  let user;
+  try {
+    user = await UserModel.findOne({ email: email });
+  } catch (err) {
+    return next(err);
+  }
+  if (!user) {
+    return res.status(200).send({
+      valid: false,
+      message: "user not found",
+    });
+  }
+  const cart = user.cart;
+  const userId = user._id;
+  if (cart.length === 0) {
+    return res.send({ valid: false, message: "cart is empty" });
+  }
+  let totalAmount = 0;
+
+  for (let i = 0; i < cart.length; i++) {
+    const productId = cart[i].product;
+
+    console.log(productId, " < _ productId=");
+
+    const fetchedProduct = await ProductModel.findById(productId);
+    if (!fetchedProduct) {
+      continue;
+    }
+    totalAmount += cart[i].quantity * fetchedProduct.price;
+  }
+  const products = cart.reduce((acc, current) => {
+    // console.log(current, "< _ current");
+    return acc.concat({
+      // @ts-ignore
+      productid: current.product,
+      quantity: current.quantity,
+    });
+  }, []);
+  // console.log("<>" + JSON.stringify(products));
+  // return res.sendStatus(500);
+  const address = user.address;
+  console.log(cart, ",,, cart");
+  const order = new OrderModel({
+    userId,
+    products,
+    address,
+    totalAmount,
+  });
+  console.log(order, "< - order");
+  // return res.sendStatus(500);
+  let orderCreatedSuccessfully = null;
+  try {
+    orderCreatedSuccessfully = await order.save();
+    // @ts-ignore
+    user.cart = [];
+    user.orders.push(orderCreatedSuccessfully._id);
+    const updatedUser = await user.save();
+
+    console.log(updatedUser);
+  } catch (err) {
+    return next(err);
+  }
+
+  return res.status(200).send(orderCreatedSuccessfully);
+};
+
+export const getOrders = async (
   req: ExtendedRequest,
   res: Response,
   next: NextFunction
@@ -37,48 +129,16 @@ export const createOrder = async (
       message: "user not found",
     });
   }
-  const cart = user.cart;
-  const userId = user._id;
-  if (cart.length === 0) {
-    return res.send({ valid: false, message: "cart is empty" });
-  }
-  // const totalAmount = cart.forEach(async (acc, product) => {
-  //   // console.log(product, "< -product");
-  //   const fetchedProduct = await ProductModel.findById(product.product)
-  //   // @ts-ignore
-  //   return acc + product.price;
-  // }, 0);
-  let totalAmount = 0;
-
-  for (let i = 0; i < cart.length; i++) {
-    const productId = cart[i].product;
-    const fetchedProduct = await ProductModel.findById(productId);
-    if (!fetchedProduct) {
-      continue;
-    }
-    totalAmount += cart[i].quantity * fetchedProduct.price;
-  }
-  console.log(totalAmount);
-  const address = user.address;
-
-  const order = new OrderModel({
-    userId,
-    products: cart,
-    address,
-    totalAmount,
-  });
-  let orderCreatedSuccessfully = null;
+  let orders;
   try {
-    orderCreatedSuccessfully = await order.save();
-    // @ts-ignore
-    user.cart = [];
-    user.orders.push(orderCreatedSuccessfully._id);
-    const updatedUser = await user.save();
-
-    console.log(updatedUser);
+    orders = await OrderModel.find({ userId: user._id });
   } catch (err) {
     return next(err);
   }
 
-  return res.status(200).send(orderCreatedSuccessfully);
+  console.log(orders);
+  return res.status(200).send({
+    valid: true,
+    orders: orders,
+  });
 };
