@@ -95,7 +95,6 @@ export const getProducts = async (
   const { skip = 0, limit = 20, category, brand } = req.query;
   try {
     let products;
-    console.log(brand);
     if (category) {
       if (brand) {
         products = await ProductModel.find({ category, brand })
